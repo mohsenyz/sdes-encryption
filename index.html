@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title></title>
+    <title></title>
 </head>
 <body>
-	<div class="box">
-		<input type="text" name="bin" id="bin">
-		<input type="text" name="key" id="key">
-		<input type="text" name="vector" id="vector">
-		<button onclick="encrypt()">Encrypt!</button>
-	</div>
+    <div class="box">
+        <input type="text" name="bin" id="bin">
+        <input type="text" name="key" id="key">
+        <input type="text" name="vector" id="vector">
+        <button onclick="encrypt()">Encrypt!</button>
+    </div>
 </body>
 </html>
 <script type="text/javascript">
-	window.Log = (function() {
-		return {
-			d : function(tag, content) {
-				console.log(tag + "  -->  " + content);
-			}
-		};
-	})();
+    window.Log = (function() {
+        return {
+            d : function(tag, content) {
+                console.log(tag + "  -->  " + content);
+            }
+        };
+    })();
     window.SDES = (function() {
         const IP = [2, 6, 3, 1, 4, 8, 5, 7];
         const RIP = [4, 1, 3, 5, 7, 2, 8, 6];
@@ -176,6 +176,14 @@
             return perm(arr, EP);
         }
 
+        function p4(arr) {
+            return perm(arr, P4);
+        }
+
+        function rip(arr) {
+            return perm(arr, RIP);
+        }
+
         obj = {
             generateKeys: function(key) {
                 Log.d("Generating keys", "key : " + key);
@@ -204,9 +212,9 @@
                 return this.encryptWithSubKeys(plainBin, key1, key2, initVector);
             },
             encryptWithSubKeys: function(plainBin, subKey1, subKey2, initVector) {
-            	if (initVector != undefined) {
-                	plainBin = xor(plainBin, initVector);
-            	}
+                if (initVector != undefined) {
+                    plainBin = xor(plainBin, initVector);
+                }
                 ip = perm(plainBin, IP);
                 Log.d("Encryption", "plainBin <- permutation IP on plainBin:" + ip);
 
@@ -228,79 +236,84 @@
                 row2 = decof(repxk1[4], repxk1[7]);
                 Log.d("Encryption", "S1 row : " + row2);
                 col2 = decof(repxk1[5], repxk1[6]);
-                Log.d("Encryption", "S2 col : " + col2);
+                Log.d("Encryption", "S1 col : " + col2);
                 s1val = binof(S1[row2][col2]);
-                Log.d(s1val);
+                Log.d("Encryption", "S1[row][col] : " + s1val);
 
                 table_res_1 = combine_arr(s0val, s1val);
-                Log.d("Result 1 of tables: ");
-                Log.d(table_res_1);
+                Log.d("Encryption", "S0Box result : " + table_res_1);
 
 
-                tr1p4 = perm(table_res_1, P4);
-                Log.d("Table result 1 perm with P4");
-                Log.d(tr1p4);
+                tr1p4 = p4(table_res_1);
+                Log.d("Encryption", "S0Box <- P4 permutation on S0Box : " + tr1p4);
 
                 xor_tr1p4_ipr4 = xor(tr1p4, leftbits(ip, 4));
-                Log.d("Xor of table result 1 and 4 left bits of IP");
-                Log.d(xor_tr1p4_ipr4);
+                Log.d("Encryption", "S0Box <- Xor of S0Box and 4 left bits of ip : " + xor_tr1p4_ipr4);
 
                 rw_lr_sw = combine_arr(rightbits(ip, 4), xor_tr1p4_ipr4);
-                Log.d("Rewrited blue with it 4 left bits replaced and swapped also");
-                Log.d(rw_lr_sw);
+                Log.d("Encryption", "#green Rewrited ip with it 4 left bits replaced with S0Box and 4 left bits swapped with 4 last bits : " + rw_lr_sw);
 
-                rw_ep = perm(rightbits(rw_lr_sw, 4), EP);
-                Log.d("Then perm with EP");
-                Log.d(rw_ep);
+                rw_ep = ep(rightbits(rw_lr_sw, 4));
+                Log.d("Encryption", "ip <- EP permutation on 4 right bits of ip : " + rw_ep);
+
 
                 rw_ep_xk2 = xor(rw_ep, subKey2);
-                Log.d("Xor with key2");
-                Log.d(rw_ep_xk2);
+                Log.d("Encryption", "subkey2 XOR ip : " + rw_ep_xk2);
 
                 repxk1 = rw_ep_xk2;
 
                 row1 = decof(repxk1[0], repxk1[3]);
+                Log.d("Encryption", "S0 row : " + row1);
                 col1 = decof(repxk1[1], repxk1[2]);
+                Log.d("Encryption", "S0 col : " + col1);
                 s0val = binof(S0[row1][col1]);
-                Log.d(s0val);
+                Log.d("Encryption", "S0[row][col] : " + s0val);
 
                 row2 = decof(repxk1[4], repxk1[7]);
+                Log.d("Encryption", "S1 row : " + row2);
                 col2 = decof(repxk1[5], repxk1[6]);
+                Log.d("Encryption", "S1 col : " + col2);
                 s1val = binof(S1[row2][col2]);
-                Log.d(s1val);
+                Log.d("Encryption", "S0[row][col] : " + s1val);
 
                 table_res_1 = combine_arr(s0val, s1val);
-                Log.d("Result 2 of tables: ");
-                Log.d(table_res_1);
+                Log.d("Encryption", "S0Box result : " + table_res_1);
 
 
                 table_res_2 = table_res_1;
-                tr2_p4 = perm(table_res_2, P4);
-                Log.d("Perm 4 on Table result 2");
-                Log.d(tr2_p4);
+                tr2_p4 = p4(table_res_2);
+                Log.d("Encryption", "S0Box <- P4 permutation on S0Box result : " + tr2_p4);
 
                 xor_rw_lr_sw_l4 = xor(tr2_p4, leftbits(rw_lr_sw, 4));
-                Log.d("Xored with 4 left bits of choom swap");
-                Log.d(xor_rw_lr_sw_l4);
+                Log.d("Encryption", "S0Box <- S0Box XOR with 4 left bits of #green : " + xor_rw_lr_sw_l4);
 
                 rw_f = combine_arr(xor_rw_lr_sw_l4, rightbits(rw_lr_sw, 4));
-                Log.d("Marheleye yeki moonde be akhar hastim!");
-                Log.d(rw_f);
+                Log.d("Encryption", "S0Box <- S0Box combined with 4 right bits of #green");
 
                 cipher = perm(rw_f, RIP);
-                Log.d("cipher");
-                Log.d(cipher);
+                Log.d("Encryption", "RIP permutation on S0Box : " + cipher);
+                Log.d("Encryption", "Cipher : " + cipher);
                 return cipher;
             },
             encryptCfb: function(plainBin, key, initVector) {
                 str = "";
                 tempInitVector = initVector;
                 for (var v = 0; v < plainBin.length / BLOCK_SIZE; v++) {
-                    console.log(v);
+                    Log.d("CFB-Encryption", "current plaintext block : " + plainBin.slice(v * BLOCK_SIZE, v * BLOCK_SIZE + BLOCK_SIZE));
+
                     enc = SDES.encrypt(initVector, key);
+                    Log.d("CFB-Encryption", "enc <- Encrypted initVector with key : " + enc);
+
                     lbits = leftbits(enc, BLOCK_SIZE);
+                    Log.d("CFB-Encryption", "enc <- 4 left bits of enc : " + enc);
+
                     c = xor(plainBin.slice(v * BLOCK_SIZE, v * BLOCK_SIZE + BLOCK_SIZE), lbits);
+                    Log.d("CFB-Encryption", "enc <- " + (v + 1) + "th block of plaintext xor with enc : " + c);
+                    Log.d("CFB-Encryption", "Current block cipher : " + c);
+
                     initVector = combine_arr(rightbits(initVector, 4), c);
+                    Log.d("CFB-Encryption", "initVector <- combining 4 right bits of initVector and enc : " + initVector);
+                    
                     str += c;
                 }
                 encrypted = binStringToArray(str.split(",").join("").trim());
@@ -323,32 +336,27 @@
     })();
 
     function binStringToArray(str) {
-    	temp = [];
-    	for (i = 0; i < str.length; i++) {
-    		if (str[i] == "1")
-    			temp[i] = 1;
-    		else
-    			temp[i] = 0;
-    	}
-    	return temp;
+        temp = [];
+        for (i = 0; i < str.length; i++) {
+            if (str[i] == "1")
+                temp[i] = 1;
+            else
+                temp[i] = 0;
+        }
+        return temp;
     }
 
     function encrypt() {
-    	bin = document.getElementById("bin").value;
-    	key = document.getElementById("key").value;
-    	vector = document.getElementById("vector").value;
-    	temp = SDES.encrypt(binStringToArray(bin), binStringToArray(key), binStringToArray(vector));
-    	str = "";
-    	for (i = 0; i < temp.length; i++) {
-    		str = str + temp[i].toString();
-    	}
-    	alert(str);
-    }
-
-
-    
-    alert(SDES.encryptCfb(binStringToArray('0001001000110100'), binStringToArray('0111111101'), binStringToArray('10101011')));
-    
+        bin = document.getElementById("bin").value;
+        key = document.getElementById("key").value;
+        vector = document.getElementById("vector").value;
+        temp = SDES.encrypt(binStringToArray(bin), binStringToArray(key), binStringToArray(vector));
+        str = "";
+        for (i = 0; i < temp.length; i++) {
+            str = str + temp[i].toString();
+        }
+        alert(str);
+    }    
 
 
 </script>
